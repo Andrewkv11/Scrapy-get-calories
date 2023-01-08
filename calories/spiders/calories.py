@@ -1,3 +1,4 @@
+import csv
 import scrapy
 
 
@@ -8,7 +9,7 @@ class QuotesSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        for category in response.css('ul.product'):
+        for category in response.css('ul.product')[:-1]:
             for sub_category in category.css('li'):
                 sub_category_url = sub_category.css('a::attr(href)').get()
                 yield response.follow(sub_category_url, callback=self.parse_subcategory)
@@ -29,3 +30,7 @@ class QuotesSpider(scrapy.Spider):
                 'Углеводы': product_carbohydrates,
                 'Ккал': product_kcal
             }
+
+        next_page = response.css('li.pager-next a::attr(href)').get()
+        if next_page:
+            yield response.follow(next_page, callback=self.parse_subcategory)
